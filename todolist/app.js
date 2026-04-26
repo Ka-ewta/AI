@@ -1,14 +1,13 @@
-/**
- * Simple in-memory todo app state (no DB).
- * Each tab owns its own list for clarity and maintainability.
- */
-const state = {
-  activeTab: "work",
-  todosByTab: {
-    work: [],
-    private: [],
-  },
-};
+import {
+  addTodoToState,
+  createInitialState,
+  getActiveTodos,
+  removeTodoFromState,
+  setActiveTab,
+  validateTodoInput,
+} from "./todo-core.js";
+
+const state = createInitialState();
 
 const dom = {
   form: document.querySelector("#todo-form"),
@@ -24,10 +23,6 @@ const dom = {
 
 function generateId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function getActiveTodos() {
-  return state.todosByTab[state.activeTab];
 }
 
 function formatTabLabel(tab) {
@@ -46,41 +41,28 @@ function clearError() {
   setError("");
 }
 
-function validateForm({ title, deadline }) {
-  if (!title.trim()) {
-    return "Task is required.";
-  }
-  if (!deadline) {
-    return "Deadline is required.";
-  }
-  return "";
-}
-
 function addTodo({ title, deadline }) {
-  const nextItem = {
+  addTodoToState(state, {
     id: generateId(),
-    title: title.trim(),
+    title,
     deadline,
-  };
-  getActiveTodos().push(nextItem);
+  });
 }
 
 function removeTodo(todoId) {
-  const items = getActiveTodos();
-  const nextItems = items.filter((todo) => todo.id !== todoId);
-  state.todosByTab[state.activeTab] = nextItems;
+  removeTodoFromState(state, todoId);
 }
 
 function updateHeader() {
   const tabLabel = formatTabLabel(state.activeTab);
-  const total = getActiveTodos().length;
+  const total = getActiveTodos(state).length;
   dom.listTitle.textContent = `${tabLabel} tasks`;
   dom.itemCount.textContent = `${total} item${total === 1 ? "" : "s"}`;
 }
 
 function renderList() {
   dom.list.innerHTML = "";
-  const todos = getActiveTodos();
+  const todos = getActiveTodos(state);
   if (todos.length === 0) {
     const emptyItem = document.createElement("li");
     emptyItem.className = "todo-list__empty";
@@ -129,7 +111,7 @@ function onSubmit(event) {
     deadline: dom.deadlineInput.value,
   };
 
-  const validationError = validateForm(payload);
+  const validationError = validateTodoInput(payload);
   if (validationError) {
     setError(validationError);
     return;
@@ -144,11 +126,15 @@ function onSubmit(event) {
 function onTabClick(event) {
   const target = event.currentTarget;
   const nextTab = target.dataset.tab;
-  if (!nextTab || nextTab === state.activeTab) {
+  if (!nextTab) {
     return;
   }
 
-  state.activeTab = nextTab;
+  const hasChanged = setActiveTab(state, nextTab);
+  if (!hasChanged) {
+    return;
+  }
+
   clearError();
   render();
 }

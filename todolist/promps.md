@@ -10,3 +10,12 @@ Build todolist app ใน web and support mobile
 
 # 2026-04-26 11:57 (UTC+7)
 push ขึ้น github : https://github.com
+
+# 2026-04-26 12:08 (UTC+7)
+write README.md ให้หน่อย
+
+# 2026-04-26 12:09 (UTC+7)
+เพิ่ม automation test and unit test ให้ด้วย
+
+# 2026-04-26 12:16 (UTC+7)
+implement page object patter ใน automation test ด้วย
